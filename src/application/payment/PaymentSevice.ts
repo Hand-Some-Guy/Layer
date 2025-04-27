@@ -1,5 +1,5 @@
 import PaymentStatusDTO from "./dto/PaymentStatusDTO";
-import PaymentRepository from "../repository/PaymentRepository";
+import PaymentRepository from "../../repository/payment/PaymentRepository";
 
 class PaymentService {
   constructor(private readonly paymentRepository: PaymentRepository) {}

@@ -1,4 +1,4 @@
-import PaymentStatusDTO from "../application/dto/PaymentStatusDTO";
+import PaymentStatusDTO from "../../application/payment/dto/PaymentStatusDTO";
 
 // 다양한 라이브러리 대응하는 구현체를 만들기 위한 역할 정의
 // findById : 인자 : userid 반환 Payment객체체

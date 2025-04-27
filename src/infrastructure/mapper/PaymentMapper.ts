@@ -1,4 +1,4 @@
-import PaymentStatusDTO from "../../application/dto/PaymentStatusDTO";
+import PaymentStatusDTO from "../../application/payment/dto/PaymentStatusDTO";
 
 type PaymentPersistenceData = {
   paymentId: number;
