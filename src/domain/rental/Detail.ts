@@ -1,66 +1,44 @@
 // RentalDetail 엔티티 객체
 // 이용 정보에 대한 상세 기록
 // id 데이터베이스의 Auto incrment 값을 저장하여 대여 기록을 식별한다
-class Detail {
+class RentalPeriod {
   private readonly startTime: Date;
-  private endTime?: Date;
+  private readonly endTime: Date | null;
   private readonly startCoordinate: number[];
-  private endCoordinate?: number[];
+  private readonly endCoordinate: number[] | null;
 
-  constructor(startTime: Date, startCoordinate: number[]) {
+  constructor(
+    startTime: Date,
+    startCoordinate: number[],
+    endTime?: Date,
+    endCoordinate?: number[]
+  ) {
     if (!startTime || startTime.getTime() <= new Date().getTime())
-      throw Error("Invalid startTime time");
-    if (!startCoordinate) throw Error("Invalid Coordinate");
+      throw new Error("startTime must not null");
+    if (!startCoordinate) throw new Error("startCoordinate must not null");
 
     this.startTime = startTime;
     this.startCoordinate = startCoordinate;
+    this.endTime = endTime || null;
+    this.endCoordinate = endCoordinate || null;
   }
 
-  toPersistence(): {
-    startTime: Date;
-    startCoordinate: number[];
-    endTime: Date | undefined;
-    endCoordinate: number[] | undefined;
-  } {
-    return {
-      startTime: this.startTime,
-      startCoordinate: this.startCoordinate,
-      endTime: this.endTime,
-      endCoordinate: this.endCoordinate,
-    };
-  }
-
-  // 반납 정보 디테일 획득 메서드
-  // TODO : 타입 선언 필요
-  getDetail() {
-    return {
-      startTime: this.startTime,
-      endTime: this.endTime,
-      startCoordinate: this.startCoordinate,
-      endCoordinate: this.endCoordinate,
-    };
-  }
-
-  // 이용 완료 상태인지 검사하는 메서드
-  useCompleted(): boolean {
-    return (
-      this.endCoordinate != null &&
-      this.startCoordinate != null &&
-      true &&
-      this.startTime != null &&
-      this.endTime != null
+  completePeriod(endTime: Date, endCoordinate: number[]): RentalPeriod {
+    if (this.endTime || this.endCoordinate) {
+      throw new Error("Rental period already completed.");
+    }
+    if (endTime <= this.startTime) {
+      throw new Error("End time must be after start time.");
+    }
+    return new RentalPeriod(
+      this.startTime,
+      this.startCoordinate,
+      endTime,
+      endCoordinate
     );
   }
 
-  // 반납 좌표 설정
-  setEndDetail(endTime: Date, endCoordinate: number[]) {
-    // 간단한 반납 정보 입력 규칙
-    // 시작 시간과 같거나 좌표값이 값은 경우 입력 배제
-    if (this.startTime === endTime) throw Error("Invalid endTime time");
-    if (this.startCoordinate === endCoordinate)
-      throw Error("Invalid startCoordinate");
-
-    this.endTime = endTime;
-    this.endCoordinate = endCoordinate;
+  isCompleted(): boolean {
+    return !!this.endTime && !!this.endCoordinate;
   }
 }

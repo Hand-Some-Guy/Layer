@@ -5,18 +5,9 @@ class Device {
   private readonly bleKey: string;
 
   constructor(id: string, auth: string, bleId: string) {
-    if (!id || !auth || !bleId) throw new Error("Invalid device data");
     this.id = id;
     this.authKey = auth;
     this.bleKey = bleId;
-  }
-
-  toPersistence(): { deviceId: string; authKey: string; bleKey: string } {
-    return {
-      deviceId: this.id,
-      authKey: this.authKey,
-      bleKey: this.bleKey,
-    };
   }
 
   getId(): string {

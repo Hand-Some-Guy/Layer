@@ -1,76 +1,68 @@
-type PayState = "PENDING" | "CONTINUE" | "REJECTED" | "APPROVED";
-type PaymentMethodType = "CREDIT_CARD" | "KAKAO" | "NAVER";
+// USE : 자전거 이용중
+// CONTINUE : PG 결재 요청 대기중
+// REJECTED, APPROVED : PG 결재 상태
+type PayState = "USE" | "CONTINUE" | "REJECTED" | "APPROVED";
 
 // 애그리거크 루트: 결재
+// TODO : 역할을 비대 부여하지 말 것
 class Payment {
-  readonly paymentId: number;
-  readonly user: User;
-  payState: PayState;
-  readonly rentalDetail: RentalDetail;
-  readonly paymentMethod: PaymentMethod;
+  private paymentId: number;
+  private userId: string;
+  private payState: PayState;
+  // 하위 엔티티티
+  private usePeriod: UsePeriod;
 
   // 생성자 메서드
   private constructor(
     paymentId: number,
-    user: User,
-    rentalDetail: RentalDetail,
-    paymentMethod: PaymentMethod
+    userId: string,
+    usePeriod: UsePeriod,
+    payState: PayState
   ) {
     if (paymentId <= 0) throw new Error("Invalid payment ID");
     this.paymentId = paymentId;
-    this.user = user;
-    this.rentalDetail = rentalDetail;
-    this.paymentMethod = paymentMethod;
-    this.payState = "PENDING";
+    this.userId = userId;
+    this.usePeriod = usePeriod;
+    this.payState = payState;
   }
 
+  // Factory 패턴 대체 [전역 메서드]
   static create(
     paymentId: number,
-    user: User,
-    rentalDetail: RentalDetail,
-    paymentMethod: PaymentMethod
+    user: string,
+    useTime: number,
+    baseRatePerMinute: number,
+    discount: number,
+    penalty: number
   ): Payment {
-    return new Payment(paymentId, user, rentalDetail, paymentMethod);
+    if (!paymentId) throw new Error("Id not valide");
+    if (!user) throw new Error("user not valide");
+
+    const usePeriod = new UsePeriod(
+      useTime,
+      baseRatePerMinute,
+      discount,
+      penalty
+    );
+
+    return new Payment(paymentId, user, usePeriod, "CONTINUE");
   }
 
-  // 이용 상태 반환
-  // 규칙 : 결재를 진행한 사용자와 현재 결재 내역이 일치하는지 검사
-  checkState(userId: string): PayState {
-    if (!this.validateUser(userId)) throw new Error("Invalid user ID");
-    return this.payState;
+  // --- 비즈니스 로직 메서드 ---
+  // PG 처리 완료 시 상태 변경
+  useComplite(PGState: string): void {
+    if (PGState === "faile") {
+      this.payState = "REJECTED";
+      throw new Error();
+    }
+
+    this.payState = "APPROVED";
   }
 
-  // 결재 시스템이 인식 할 수 있도록 결재 상태 변경
-  repay(): boolean {
-    if (this.payState !== "REJECTED") throw new Error("Repaying failed");
-    if (!this.paymentMethod) throw new Error("Payment method not implemented");
-    if (!this.rentalDetail) throw new Error("RentalDetail not implemented");
-
-    // 결재 상태 APPROVED 변경
-    // 재결재 호출 완료 여부 반환
-    return true;
-  }
-
+  // --- 상태 조회 메서드 ---
   // 결재 정보 반환 메서드
-  // 규칙 : 결재를 진행한 사용자와 현재 결재 내역이 일치하는지 검사
-  // 결재가 완료된 경우에 반환
-  getRentalDetail(userId: string): RentalDetail {
-    if (!this.validateUser(userId)) throw new Error("Invalid user ID");
-    if (this.payState !== "APPROVED")
-      throw new Error("Pay State is not APPROVED");
-
-    return this.rentalDetail;
-  }
-
-  // 유틸리티 메서드
-  // 사용자 유효성 검사
-  private validateUser(userId: string): boolean | string {
-    return userId && this.user.getId() === userId;
-  }
-
-  // 리포지토리에서 상태 업데이트를 위해 사용
-  setPayState(state: PayState): void {
-    this.payState = state;
+  getUsePeriod(): UsePeriod {
+    return this.usePeriod;
   }
 
   getPaymentId(): number {
@@ -79,5 +71,9 @@ class Payment {
 
   getPayState(): PayState {
     return this.payState;
+  }
+
+  isOwnedBy(userId: string): boolean {
+    return this.userId === userId;
   }
 }
