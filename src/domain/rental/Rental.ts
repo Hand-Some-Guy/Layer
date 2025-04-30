@@ -12,6 +12,8 @@ export default class Rental {
   // 하위 엔티티 객체
   private readonly rentalPeriod: RentalPeriod;
 
+  // TODO : optinal 추가 여부 검토 - 종료 정보
+  // TODO : 재구성 메서드 생성 여부 검토
   static create(
     rentalId: number,
     userId: string,
